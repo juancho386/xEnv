@@ -1,0 +1,26 @@
+#!/bin/bash
+
+#TODO: verify dependencies
+
+where="${HOME}/.environments-enc"
+
+if [ "$1" == "-n" ]; then
+	read -p "One-word identification: " f
+	e=$( echo '' | vipe | cat -)
+	echo -n "$e" | openssl enc -e -aes-256-ecb -pbkdf2 -out "${where}/${f}.aes256ecb"
+	exit 0
+fi
+
+pushd ${where} #1>/dev/null
+w=$( echo * | sed "s/\.aes256ecb//g" )
+c=$( echo $w |wc -w )
+popd 1>/dev/null
+l=$(echo $w | sed -E "s/ / \< /g;s/$/ \</ ")
+
+cuenta=$(dialog --stdout --menu Account $((c+8)) 70 $((c+3)) ${l})
+echo
+
+if [ x${cuenta} != x ]; then
+	INIT=$(openssl enc -d -aes-256-ecb -pbkdf2 -in ${where}/${cuenta}.aes256ecb|sed -E "s/$/;/g"|xargs|sed -E "s/^/. ~\/.bashrc;export NAMESPACE=${cuenta};/g")
+	bash --init-file <( echo $INIT )
+fi

@@ -1,26 +1,86 @@
 #!/bin/bash
 
-#TODO: verify dependencies
+#Check for dependencies
+dependencies='tput seq tr sed wc openssl vipe dialog xargs'
+for dep in $dependencies; do
+	which $dep 1>/dev/null
+	if [ ! $? -eq 0 ]; then
+		echo "Error: $dep is required but not installed. Please install it"
+		exit 1
+	fi
+done
+
 
 where="${HOME}/.environments-enc"
+if [ ! -d ${where} ]; then
+	echo "Environment encoded directory does not exists. Creating it"
+	mkdir ${where}
+fi
 
-if [ "$1" == "-n" ]; then
-	read -p "One-word identification: " f
+function cleaning() { #WiP
+	cols=$(tput cols)
+	lines=$(tput lines)
+	q=$(( $cols * $lines ))
+	spaces=$(seq -s\  $q|tr -d '[:digit:]')
+	echo -e "\033[0;0H${spaces}"
+	echo -e "\033[0;0H"
+	echo
+}
+
+
+pushd ${where} 1>/dev/null
+	w=$( echo * | sed "s/\.aes256ecb//g" )
+	c=$( echo $w |wc -w )
+popd 1>/dev/null
+l=$(echo $w | sed -E "s/ / \< /g;s/$/ \</ ")
+
+if [ "$1" == "--help" ]; then
+	echo "Environment switcher"
+	echo "how to use it:"
+	echo "    E --help             this"
+	echo "    E --new              Creates a new environment"
+	echo "    E --edit             Edit the content of an environment"
+	echo "    E --rm               Removes an environment"
+	exit 0
+fi
+
+if [ "$1" == "--new" ]; then
+	read -p "One-word identification (no spaces): " f
 	e=$( echo '' | vipe | cat -)
 	echo -n "$e" | openssl enc -e -aes-256-ecb -pbkdf2 -out "${where}/${f}.aes256ecb"
 	exit 0
 fi
 
-pushd ${where} #1>/dev/null
-w=$( echo * | sed "s/\.aes256ecb//g" )
-c=$( echo $w |wc -w )
-popd 1>/dev/null
-l=$(echo $w | sed -E "s/ / \< /g;s/$/ \</ ")
+if [ "$1" == "--rm" ]; then
+	cuenta=$(dialog --stdout --menu Remove $((c+8)) 70 $((c+3)) ${l})
+	if [ x${cuenta} != x ]; then
+		dialog --yesno "Removing ${cuenta}.\n Are you sure?" 6 40
+		if [ $? == 0 ]; then
+			rm ${where}/${cuenta}.aes256ecb
+		fi
+	fi
+	exit 0
+fi
+
+if [ "$1" == "--edit" ]; then
+	cuenta=$(dialog --stdout --menu Account $((c+8)) 70 $((c+3)) ${l})
+	e=$(openssl enc -d -aes-256-ecb -pbkdf2 -in ${where}/${cuenta}.aes256ecb )
+	if [ ! $? -eq 0 ]; then
+		echo 'Wrong...'
+		exit 1
+	fi
+	e=$( echo -n "$e" | vipe | cat - )
+	echo "Saving..."
+	echo -n "$e" | openssl enc -e -aes-256-ecb -pbkdf2 -out "${where}/${cuenta}.aes256ecb"
+	exit 0
+fi
+
 
 cuenta=$(dialog --stdout --menu Account $((c+8)) 70 $((c+3)) ${l})
 echo
 
 if [ x${cuenta} != x ]; then
 	INIT=$(openssl enc -d -aes-256-ecb -pbkdf2 -in ${where}/${cuenta}.aes256ecb|sed -E "s/$/;/g"|xargs|sed -E "s/^/. ~\/.bashrc;export NAMESPACE=${cuenta};/g")
+	# cleaning
 	bash --init-file <( echo $INIT )
 fi

@@ -1,5 +1,4 @@
 #!/bin/bash
-
 #Check for dependencies
 dependencies='tput seq tr sed wc openssl vipe dialog xargs'
 for dep in $dependencies; do
@@ -52,7 +51,7 @@ if [ "$1" == "--new" ]; then
 fi
 
 if [ "$1" == "--rm" ]; then
-	cuenta=$(dialog --stdout --menu Remove $((c+8)) 70 $((c+3)) ${l})
+	cuenta=$(dialog --stdout --menu Remove $((c+8)) 70 $((c+3)) ${l} )
 	if [ x${cuenta} != x ]; then
 		dialog --yesno "Removing ${cuenta}.\n Are you sure?" 6 40
 		if [ $? == 0 ]; then
@@ -63,7 +62,7 @@ if [ "$1" == "--rm" ]; then
 fi
 
 if [ "$1" == "--edit" ]; then
-	cuenta=$(dialog --stdout --menu Account $((c+8)) 70 $((c+3)) ${l})
+	cuenta=$(dialog --no-items --stdout --menu Account $((c+8)) 70 $((c+3)) ${l} )
 	e=$(openssl enc -d -aes-256-ecb -pbkdf2 -in ${where}/${cuenta}.aes256ecb )
 	if [ ! $? -eq 0 ]; then
 		echo 'Wrong...'

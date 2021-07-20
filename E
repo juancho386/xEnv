@@ -62,7 +62,7 @@ if [ "$1" == "--rm" ]; then
 fi
 
 if [ "$1" == "--edit" ]; then
-	cuenta=$(dialog --no-items --stdout --menu Account $((c+8)) 70 $((c+3)) ${l} )
+	cuenta=$( dialog --no-items --stdout --menu Account $((c+8)) 70 $((c+3)) ${l} )
 	e=$(openssl enc -d -aes-256-ecb -pbkdf2 -in ${where}/${cuenta}.aes256ecb )
 	if [ ! $? -eq 0 ]; then
 		echo 'Wrong...'

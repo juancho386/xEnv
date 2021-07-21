@@ -12,7 +12,7 @@ done
 
 where="${HOME}/.environments-enc"
 if [ ! -d ${where} ]; then
-	echo "Environment encoded directory does not exists. Creating it"
+	echo "Environment encoded directory does not exists. Creating it."
 	mkdir ${where}
 fi
 

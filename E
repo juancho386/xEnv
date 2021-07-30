@@ -7,7 +7,7 @@ for dep in $dependencies; do
 		echo "Error: $dep is required but not installed. Please install it"
 		exit 1
 	fi
-done
+done 
 
 
 where="${HOME}/.environments-enc"

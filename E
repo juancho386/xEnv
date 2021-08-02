@@ -7,12 +7,12 @@ for dep in $dependencies; do
 		echo "Error: $dep is required but not installed. Please install it"
 		exit 1
 	fi
-done
+done 
 
 
 where="${HOME}/.environments-enc"
 if [ ! -d ${where} ]; then
-	echo "Environment encoded directory does not exists. Creating it"
+	echo "Environment encoded directory does not exists. Creating it."
 	mkdir ${where}
 fi
 

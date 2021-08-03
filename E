@@ -7,7 +7,7 @@ for dep in $dependencies; do
 		echo "Error: $dep is required but not installed. Please install it"
 		exit 1
 	fi
-done 
+done
 
 
 where="${HOME}/.environments-enc"
@@ -51,7 +51,7 @@ if [ "$1" == "--new" ]; then
 fi
 
 if [ "$1" == "--rm" ]; then
-	cuenta=$(dialog --stdout --menu Remove $((c+8)) 70 $((c+3)) ${l} )
+	cuenta=$(dialog --stdout --no-items --menu Remove $((c+8)) 70 $((c+3)) ${l} )
 	if [ x${cuenta} != x ]; then
 		dialog --yesno "Removing ${cuenta}.\n Are you sure?" 6 40
 		if [ $? == 0 ]; then

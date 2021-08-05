@@ -4,7 +4,7 @@ dependencies='tput seq tr sed wc openssl vipe dialog xargs'
 for dep in $dependencies; do
 	which $dep 1>/dev/null
 	if [ ! $? -eq 0 ]; then
-		echo "Error: $dep is required but not installed. Please install it"
+		echo "Error: $dep is required but not installed. Please install it."
 		exit 1
 	fi
 done
@@ -31,7 +31,7 @@ pushd ${where} 1>/dev/null
 	w=$( echo * | sed "s/\.aes256ecb//g" )
 	c=$( echo $w |wc -w )
 popd 1>/dev/null
-l=$(echo $w ) # | sed -E "s/ / \< /g;s/$/ \</ ")
+l=$(echo $w )
 
 if [ "$1" == "--help" ]; then
 	echo "Environment switcher"
@@ -53,7 +53,7 @@ fi
 if [ "$1" == "--rm" ]; then
 	cuenta=$(dialog --stdout --no-items --menu Remove $((c+8)) 70 $((c+3)) ${l} )
 	if [ x${cuenta} != x ]; then
-		dialog --yesno "Removing ${cuenta}.\n Are you sure?" 6 40
+		dialog --yesno "Removing ${cuenta}.\n   Are you sure?" 6 40
 		if [ $? == 0 ]; then
 			rm ${where}/${cuenta}.aes256ecb
 		fi

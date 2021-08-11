@@ -20,10 +20,12 @@ function cleaning() { #WiP
 	cols=$(tput cols)
 	lines=$(tput lines)
 	q=$(( $cols * $lines ))
-	spaces=$(seq -s\  $q|tr -d '[:digit:]')
+	spaces=$(seq -s\  $cols|tr -d '[:digit:]')
 	echo -e "\033[0;0H${spaces}"
+	for i in $(seq 1 $lines); do
+		echo -e "${spaces}"
+	done
 	echo -e "\033[0;0H"
-	echo
 }
 
 
@@ -80,7 +82,7 @@ echo
 
 if [ x${cuenta} != x ]; then
 	INIT=$(openssl enc -d -aes-256-ecb -pbkdf2 -in ${where}/${cuenta}.aes256ecb|sed -E "s/$/;/g"|xargs|sed -E "s/^/. ~\/.bashrc;export NAMESPACE=${cuenta};/g")
-	# cleaning
+	cleaning
 	bash --init-file <( echo $INIT )
 fi
 

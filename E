@@ -55,7 +55,7 @@ fi
 if [ "$1" == "--rm" ]; then
 	cuenta=$(dialog --stdout --no-items --menu Remove $((c+8)) 70 $((c+3)) ${l} )
 	if [ x${cuenta} != x ]; then
-		dialog --yesno "Removing ${cuenta}.\n   Are you sure?" 6 40
+		dialog --yesno "Removing ${cuenta}.\n    Are you sure?" 6 40
 		if [ $? == 0 ]; then
 			rm ${where}/${cuenta}.aes256ecb
 		fi

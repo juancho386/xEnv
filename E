@@ -78,7 +78,7 @@ fi
 
 
 cuenta=$(dialog --stdout --no-items --menu Account $((c+8)) 70 $((c+3)) ${l})
-echo
+cleaning
 
 if [ x${cuenta} != x ]; then
 	INIT=$(openssl enc -d -aes-256-ecb -pbkdf2 -in ${where}/${cuenta}.aes256ecb|sed -E "s/$/;/g"|xargs|sed -E "s/^/. ~\/.bashrc;export NAMESPACE=${cuenta};/g")

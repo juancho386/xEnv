@@ -1,0 +1,51 @@
+#!/bin/bash
+
+which vipe >/dev/null
+if [ ! $? -eq 0 ]; then
+	echo -e "Error: moreutils is not installed. Try:\nsudo apt-get install moreutils"
+	exit 1
+fi
+
+which openssl >/dev/null
+if [ ! $? -eq 0 ]; then
+	echo -e "Error: openssl is not installed. Try:\nsudo apt-get install openssl"
+	exit 1
+fi
+
+
+if [ "$1" == "-n" ]; then
+	read -p "New filename: " f
+	e=$( echo '' | vipe | cat -)
+	echo -n "$e" | openssl enc -e -aes-256-ecb -pbkdf2 -out "${f}.aes256ecb"
+	exit 0
+fi
+
+if [ "$1" == "-d" ]; then
+	if [ -f $2 ]; then
+		#param=file.aes256ecb
+		openssl enc -d -aes-256-ecb -pbkdf2 -in $2
+		echo
+		exit 0
+	fi
+fi
+
+if [ "$1" == "-e" ]; then
+	if [ -f $2 ]; then
+		#param=file.aes256ecb
+		e=$(openssl enc -d -aes-256-ecb -pbkdf2 -in $2 )
+		if [ ! $? -eq 0 ]; then
+			echo 'Wrong...'
+			exit 1
+		fi
+		e=$( echo -n "$e" | vipe | cat - )
+		echo "Saving..."
+		echo -n "$e" | openssl enc -e -aes-256-ecb -pbkdf2 -out "$2"
+		exit 0
+	fi
+fi
+
+echo 'How to use it:'
+echo '   SECURE_STRING -n         Use your $EDITOR to create an encripted text file'
+echo '   SECURE_STRING -e <file>  Edit an encripted text file'
+echo '   SECURE_STRING -d <file>  Dump the content of an encripted file to STDOUT'
+exit 1;

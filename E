@@ -63,7 +63,8 @@ fi
 
 if [ "$1" == "--edit" ]; then
 	cuenta=$( dialog --no-items --stdout --menu Account $((c+8)) 70 $((c+3)) ${l} )
-	e=$(openssl enc -d -aes-256-ecb -pbkdf2 -in ${where}/${cuenta}.aes256ecb )
+	PASS=$(dialog --stdout --insecure --passwordbox "Type your passphrase" 8 60)
+	e=$(echo "${PASS}" | openssl enc -d -aes-256-ecb --kfile - -pbkdf2 -in ${where}/${cuenta}.aes256ecb )
 	if [ ! $? -eq 0 ]; then
 		echo 'Wrong...'
 		exit 1
@@ -79,7 +80,8 @@ cuenta=$(dialog --stdout --no-items --menu Account $((c+8)) 70 $((c+3)) ${l})
 echo
 
 if [ x${cuenta} != x ]; then
-	INIT=$(openssl enc -d -aes-256-ecb -pbkdf2 -in ${where}/${cuenta}.aes256ecb|sed -E "s/$/;/g"|xargs|sed -E "s/^/. ~\/.bashrc;export NAMESPACE=${cuenta};/g")
+	INIT=$(dialog --stdout --insecure --passwordbox "Type your passphrase" 8 60 | openssl enc -d -aes-256-ecb -kfile - -pbkdf2 -in ${where}/${cuenta}.aes256ecb|sed -E "s/$/;/g"|xargs|sed -E "s/^/. ~\/.bashrc;export NAMESPACE=${cuenta};/g")
+
 	# cleaning
 	bash --init-file <( echo $INIT )
 fi

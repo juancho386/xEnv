@@ -11,7 +11,7 @@ done
 
 
 where="${HOME}/.environments-enc"
-if [ ! -d ${where} ]; then
+if [[ ! -d ${where} ]]; then
 	echo "Environment encoded directory does not exists. Creating it."
 	mkdir ${where}
 fi
@@ -33,7 +33,7 @@ pushd ${where} 1>/dev/null
 popd 1>/dev/null
 l=$(echo $w ) # | sed -E "s/ / \< /g;s/$/ \</ ")
 
-if [ "$1" == "--help" ]; then
+if [[ "$1" == "--help" ]]; then
 	echo "Environment switcher"
 	echo "how to use it:"
 	echo "    E --help             this"
@@ -43,14 +43,14 @@ if [ "$1" == "--help" ]; then
 	exit 0
 fi
 
-if [ "$1" == "--new" ]; then
+if [[ "$1" == "--new" ]]; then
 	read -p "One-word identification (no spaces): " f
 	e=$( echo '' | vipe | cat -)
 	echo -n "$e" | openssl enc -e -aes-256-ecb -pbkdf2 -out "${where}/${f}.aes256ecb"
 	exit 0
 fi
 
-if [ "$1" == "--rm" ]; then
+if [[ "$1" == "--rm" ]]; then
 	cuenta=$(dialog --stdout --no-items --menu Remove $((c+8)) 70 $((c+3)) ${l} )
 	if [ x${cuenta} != x ]; then
 		dialog --yesno "Removing ${cuenta}.\n Are you sure?" 6 40
@@ -61,7 +61,7 @@ if [ "$1" == "--rm" ]; then
 	exit 0
 fi
 
-if [ "$1" == "--edit" ]; then
+if [[ "$1" == "--edit" ]]; then
 	cuenta=$( dialog --no-items --stdout --menu Account $((c+8)) 70 $((c+3)) ${l} )
 	PASS=$(dialog --stdout --insecure --passwordbox "Type your passphrase" 8 60)
 	e=$(echo "${PASS}" | openssl enc -d -aes-256-ecb --kfile - -pbkdf2 -in ${where}/${cuenta}.aes256ecb )
@@ -79,7 +79,7 @@ fi
 cuenta=$(dialog --stdout --no-items --menu Account $((c+8)) 70 $((c+3)) ${l})
 echo
 
-if [ x${cuenta} != x ]; then
+if [[ "${cuenta}" != "" ]]; then
 	INIT=$(dialog --stdout --insecure --passwordbox "Type your passphrase" 8 60 | openssl enc -d -aes-256-ecb -kfile - -pbkdf2 -in ${where}/${cuenta}.aes256ecb|sed -E "s/$/;/g"|xargs|sed -E "s/^/. ~\/.bashrc;export NAMESPACE=${cuenta};/g")
 
 	# cleaning

@@ -16,7 +16,8 @@ if [[ ! -d ${where} ]]; then
 	mkdir ${where}
 fi
 
-function cleaning() { #WiP
+
+cleaning() { #WiP
 	cols=$(tput cols)
 	lines=$(tput lines)
 	q=$(( $cols * $lines ))
@@ -28,8 +29,7 @@ function cleaning() { #WiP
 
 
 pushd ${where} 1>/dev/null
-	w=$( echo * | sed "s/\.aes256ecb//g" )
-	c=$( echo $w |wc -w )
+	w=$( find "${where}" -name "*.aes256ecb" -printf "%f\n" |sed "s/\.aes256ecb//g")
 popd 1>/dev/null
 l=$(echo $w ) # | sed -E "s/ / \< /g;s/$/ \</ ")
 
@@ -50,16 +50,6 @@ if [[ "$1" == "--new" ]]; then
 	exit 0
 fi
 
-if [[ "$1" == "--rm" ]]; then
-	cuenta=$(dialog --stdout --no-items --menu Remove $((c+8)) 70 $((c+3)) ${l} )
-	if [ x${cuenta} != x ]; then
-		dialog --yesno "Removing ${cuenta}.\n Are you sure?" 6 40
-		if [ $? == 0 ]; then
-			rm ${where}/${cuenta}.aes256ecb
-		fi
-	fi
-	exit 0
-fi
 
 if [[ "$1" == "--edit" ]]; then
 	cuenta=$( dialog --no-items --stdout --menu Account $((c+8)) 70 $((c+3)) ${l} )
@@ -76,13 +66,15 @@ if [[ "$1" == "--edit" ]]; then
 fi
 
 
-cuenta=$(dialog --stdout --no-items --menu Account $((c+8)) 70 $((c+3)) ${l})
+cuenta=$(dialog --stdout --no-items --menu Account 10 70 $((c+3)) ${l})
 echo
 
 if [[ "${cuenta}" != "" ]]; then
-	INIT=$(dialog --stdout --insecure --passwordbox "Type your passphrase" 8 60 | openssl enc -d -aes-256-ecb -kfile - -pbkdf2 -in ${where}/${cuenta}.aes256ecb|sed -E "s/$/;/g"|xargs|sed -E "s/^/. ~\/.bashrc;export NAMESPACE=${cuenta};/g")
-
-	# cleaning
-	bash --init-file <( echo $INIT )
+	INIT=$(openssl enc -d -aes-256-ecb -pbkdf2 -in ${where}/${cuenta}.aes256ecb | \
+		sed -E "s/$/;/g"| \
+		xargs | \
+		sed -E "s/^/source ~\/.bashrc;export NAMESPACE=${cuenta};/g;s/$/bash/g" \
+	)
+	bash -c "$INIT"
 fi
 

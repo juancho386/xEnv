@@ -1,6 +1,6 @@
 #!/bin/bash
 #Check for dependencies
-dependencies='tput seq tr sed wc openssl vipe dialog xargs'
+dependencies='sed openssl xargs zenity find'
 for dep in $dependencies; do
 	which $dep 1>/dev/null
 	if [ ! $? -eq 0 ]; then
@@ -16,65 +16,61 @@ if [[ ! -d ${where} ]]; then
 	mkdir ${where}
 fi
 
-
-cleaning() { #WiP
-	cols=$(tput cols)
-	lines=$(tput lines)
-	q=$(( $cols * $lines ))
-	spaces=$(seq -s\  $q|tr -d '[:digit:]')
-	echo -e "\033[0;0H${spaces}"
-	echo -e "\033[0;0H"
-	echo
-}
-
-
-pushd ${where} 1>/dev/null
-	w=$( find "${where}" -name "*.aes256ecb" -printf "%f\n" |sed "s/\.aes256ecb//g")
-popd 1>/dev/null
-l=$(echo $w ) # | sed -E "s/ / \< /g;s/$/ \</ ")
+files=$( find "${where}" -name "*.aes256ecb" -printf "%f\n" |sed "s/\.aes256ecb//g" )
 
 if [[ "$1" == "--help" ]]; then
-	echo "Environment switcher"
-	echo "how to use it:"
-	echo "    E --help             this"
-	echo "    E --new              Creates a new environment"
-	echo "    E --edit             Edit the content of an environment"
-	echo "    E --rm               Removes an environment"
+	info=$(cat <<EOINFO
+	How to use it:
+	    --help
+			this
+	    --new
+			Creates a new environment
+	    --edit
+			Edit the content of an environment
+EOINFO
+)
+	zenity --info --text="$info" --title="Environment switcher"
 	exit 0
 fi
 
 if [[ "$1" == "--new" ]]; then
-	read -p "One-word identification (no spaces): " f
-	e=$( echo '' | vipe | cat -)
-	echo -n "$e" | openssl enc -e -aes-256-ecb -pbkdf2 -out "${where}/${f}.aes256ecb"
+	newAccount=$(zenity --entry --text="One-word identification (no spaces)")
+	content=$(zenity --text-info --editable)
+	password=$(zenity --password)
+	echo -n "$content" | openssl enc -e -aes-256-ecb -pbkdf2 -out "${where}/${newAccount}.aes256ecb" --pass "pass:${password}"
 	exit 0
 fi
 
 
 if [[ "$1" == "--edit" ]]; then
-	cuenta=$( dialog --no-items --stdout --menu Account $((c+8)) 70 $((c+3)) ${l} )
-	PASS=$(dialog --stdout --insecure --passwordbox "Type your passphrase" 8 60)
-	e=$(echo "${PASS}" | openssl enc -d -aes-256-ecb --kfile - -pbkdf2 -in ${where}/${cuenta}.aes256ecb )
+	cuenta=$(zenity --list --column="Account" $files)
+	password=$(zenity --password)
+	content=$(openssl enc -d -aes-256-ecb --pass="pass:${password}" -pbkdf2 -in ${where}/${cuenta}.aes256ecb )
 	if [ ! $? -eq 0 ]; then
-		echo 'Wrong...'
+		zenity --error --text="Wrong password"
 		exit 1
 	fi
-	e=$( echo -n "$e" | vipe | cat - )
-	echo "Saving..."
-	echo -n "$e" | openssl enc -e -aes-256-ecb -pbkdf2 -out "${where}/${cuenta}.aes256ecb"
+	newContent=$(echo "$content" | zenity --text-info --editable)
+	echo -n "$newContent" | openssl enc -e -aes-256-ecb -pbkdf2 -out "${where}/${cuenta}.aes256ecb" --pass="pass:${password}"
 	exit 0
 fi
 
 
-cuenta=$(dialog --stdout --no-items --menu Account 10 70 $((c+3)) ${l})
-echo
 
+cuenta=$(zenity --list --column="Account" $files)
 if [[ "${cuenta}" != "" ]]; then
-	INIT=$(openssl enc -d -aes-256-ecb -pbkdf2 -in ${where}/${cuenta}.aes256ecb | \
-		sed -E "s/$/;/g"| \
-		xargs | \
-		sed -E "s/^/source ~\/.bashrc;export NAMESPACE=${cuenta};/g;s/$/bash/g" \
-	)
-	bash -c "$INIT"
+	password=$(zenity --password)
+	INIT=$(openssl enc -d -aes-256-ecb -pbkdf2 -in ${where}/${cuenta}.aes256ecb --pass "pass:${password}")
+	if [[ "$?" == "0" ]]; then
+		INIT=$(echo $INIT | \
+			sed -E "s/$/;/g"| \
+			xargs | \
+			sed -E "s/^/source ~\/.bashrc;export NAMESPACE=${cuenta};/g;s/$/bash/g" \
+		)
+		bash -c "$INIT"
+	else
+		zenity --error --text="Wrong password"
+	fi
+
 fi
 
